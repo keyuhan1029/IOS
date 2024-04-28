@@ -1,7 +1,21 @@
+//
+//  ContentView.swift
+//  Calculator
+//
+//  Created by Jane Chao on 2024/3/14.
+//
+
 import SwiftUI
+
 
 struct ContentView: View {
     @State var calculator = Calculator()
+    @State var shouldShowSettingsSheet: Bool = false
+    
+    @AppStorage("mainColor") var mainColor = Color.orange
+    @AppStorage("secondaryColor") var secondaryColor = Color(.systemGray4)
+    @AppStorage("numberColor") var numberColor = Color.secondary
+    @AppStorage("fontStyle") var fontStyle = Font.Design.default
     
     var body: some View {
         VStack(alignment: .trailing, spacing: 16) {
@@ -72,11 +86,25 @@ struct ContentView: View {
                 }
             }
         }
+        .fontDesign(fontStyle)
         .foregroundStyle(.white)
         .font(.largeTitle)
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         .background(Color.black)
+        .overlay(alignment: .topLeading) {
+            Button {
+                shouldShowSettingsSheet = true
+            } label: {
+                Image(systemName: "gear")
+                    .foregroundStyle(.white)
+                    .font(.largeTitle)
+            }
+        }
+        .sheet(isPresented: $shouldShowSettingsSheet) {
+            SettingsView(mainColor: $mainColor, secondaryColor: $secondaryColor, numberColor: $numberColor, fontStyle: $fontStyle)
+                .presentationDetents([.medium, .large])
+        }
     }
     
     func mainButton(mathOperator: MathOperator) -> some View {
@@ -84,7 +112,7 @@ struct ContentView: View {
             calculator.pressOperator(mathOperator)
         } label: {
             Circle()
-                .foregroundStyle(Color.orange)
+                .foregroundStyle(mainColor)
                 .overlay {
                     Image(systemName: mathOperator.systemName)
                 }
@@ -92,18 +120,17 @@ struct ContentView: View {
     }
     
     func numberButton(_ number: Int, shape: some Shape = .circle) -> some View {
-        numberButton(number.description, shape: shape) { //.discription將int轉成string
+        numberButton(number.description, shape: shape) {
             calculator.pressNumber(number)
         }
     }
     
-    func numberButton(_ label: String, shape: some Shape = .circle,
-                      action: @escaping () -> Void) -> some View {
-        Button { 
-            action() // 執行傳入的 action closure
+    func numberButton(_ label: String, shape: some Shape = .circle, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
         } label: {
             shape
-                .foregroundStyle(Color(.secondaryLabel))
+                .foregroundStyle(numberColor)
                 .overlay {
                     Text(label)
                 }
@@ -113,10 +140,10 @@ struct ContentView: View {
     func secondaryButton(_ label: LocalizedStringKey,
                          action: @escaping () -> Void) -> some View {
         Button {
-            action() //加上() 執行action這個closure
-        } label: {  // 第一個trailling closure可以省略參數名
+            action()
+        } label: {
             Circle()
-                .foregroundStyle(Color(.systemGray4))
+                .foregroundStyle(secondaryColor)
                 .overlay {
                     Text(label)
                         .foregroundStyle(.black)
